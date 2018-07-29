@@ -10,11 +10,12 @@ int main(int argc, char const *argv[]) {
     exit(-1);
   }
 
-  fs::FocusStacking focus_stacking(argv[1], fs::SelectedChannel::GREEN, 30, 40);
+  fs::FocusStacking focus_stacking(argv[1], fs::EdgeDetectionMethod::SOBEL,
+                                   fs::SelectedChannel::GREEN, 30, 40);
   auto result = focus_stacking.ComputeSharpImageAndDepthMap();
   //cv::imshow("img", result.first);
-  cv::imwrite("first_try.png", result.first);
-  cv::imwrite("depth_first_try.png", result.second);
+  cv::imwrite("sobel.png", result.first);
+  cv::imwrite("sobel_depth.png", result.second);
   cv::waitKey();
   return 0;
 }

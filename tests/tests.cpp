@@ -68,3 +68,10 @@ TEST(test_focus_stacking, PrepareLookupTableWithColors) {
   EXPECT_EQ(gray_colors[number_of_images - 1], 39);
   EXPECT_EQ(gray_colors[number_of_images], 0);
 }
+
+TEST(test_focus_stacking, Sobel) {
+  cv::Mat img = CreateTestMatrix();
+  cv::Mat weights = fs::FocusStacking::Sobel(img, 0);
+  EXPECT_EQ(weights.at<double>(0, 0), 0);
+  EXPECT_EQ(weights.at<double>(1, 1), 0);
+}

@@ -114,6 +114,29 @@ cv::Mat fs::FocusStacking::Laplacian(const cv::Mat& img, int channel) {
 }
 
 
+cv::Mat fs::FocusStacking::Sobel(const cv::Mat& img, int channel) {
+  cv::Mat Lx = (cv::Mat_<char>(3, 3) << 1, 0, -1,
+                                        2, 0, -2,
+                                        1, 0, -1);
+  cv::Mat Ly = (cv::Mat_<char>(3, 3) << 1,  2,  1,
+                                        0,  0,  0,
+                                       -1, -2, -1);
+
+  cv::Mat weights_x = ComputeWeights(img, Lx, channel);
+  cv::Mat weights_y = ComputeWeights(img, Lx, channel);
+
+  cv::Mat weights = cv::Mat(img.rows, img.cols, CV_64FC1);
+  for (int r = 0; r < weights.rows; ++r) {
+    for (int c = 0; c < weights.cols; ++c) {
+      weights.at<double>(r, c) = sqrt(pow(weights_x.at<double>(r, c), 2) +
+                                      pow(weights_y.at<double>(r, c), 2));
+    }
+  }
+
+  return weights;
+}
+
+
 std::vector<cv::Mat> fs::FocusStacking::ProcessImages(const std::vector<cv::Mat>& images) {
   const size_t number_of_images = images.size();
   std::vector<cv::Mat> processed_images(number_of_images);
@@ -124,7 +147,12 @@ std::vector<cv::Mat> fs::FocusStacking::ProcessImages(const std::vector<cv::Mat>
   std::vector<cv::Mat> weights(number_of_images);
   for (size_t i = 0; i < number_of_images; ++i) {
     GaussianBlur(&processed_images[i]);
-      weights[i] = Laplacian(processed_images[i], static_cast<int>(selected_channel_));
+    if (edge_detection_method_ == EdgeDetectionMethod::LAPLACIAN)
+      weights[i] =
+          Laplacian(processed_images[i], static_cast<int>(selected_channel_));
+    else
+      weights[i] =
+          Sobel(processed_images[i], static_cast<int>(selected_channel_));
   }
 
   return weights;
