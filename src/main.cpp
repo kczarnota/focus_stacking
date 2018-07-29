@@ -11,8 +11,10 @@ int main(int argc, char const *argv[]) {
   }
 
   fs::FocusStacking focus_stacking(argv[1], fs::SelectedChannel::GREEN);
-  cv::Mat result = focus_stacking.ComputeSharpImage();
-  cv::imshow("img", result);
+  auto result = focus_stacking.ComputeSharpImageAndDepthMap();
+  //cv::imshow("img", result.first);
+  cv::imwrite("first_try.png", result.first);
+  cv::imwrite("depth_first_try.png", result.second);
   cv::waitKey();
   return 0;
 }

@@ -1,13 +1,16 @@
 #include "focus_stacking.h"
 
 
-cv::Mat fs::FocusStacking::ComputeSharpImage() {
+std::pair<cv::Mat, cv::Mat> fs::FocusStacking::ComputeSharpImageAndDepthMap() {
   std::vector<cv::Mat> weights = ProcessImages(*images_);
 
   const int cols = (*images_)[0].cols;
   const int rows = (*images_)[0].rows;
   const size_t number_of_images = images_->size();
   cv::Mat result = cv::Mat::zeros(rows, cols, CV_8UC3);
+  cv::Mat depth = cv::Mat::zeros(rows, cols, CV_8UC1);
+  std::vector<uchar> gray_colors =
+      PrepareLookupTableWithColors(number_of_images);
 
   for (int r = 0; r < rows; ++r) {
     for (int c = 0; c < cols; ++c) {
@@ -21,15 +24,18 @@ cv::Mat fs::FocusStacking::ComputeSharpImage() {
       }
 
       result.at<cv::Vec3b>(r, c) = (*images_)[max_ind].at<cv::Vec3b>(r, c);
+      depth.at<uchar>(r, c) = gray_colors[max_ind];
     }
   }
 
-  return result;
+  return std::make_pair(result, depth);
 }
 
 
 void fs::FocusStacking::GaussianBlur(cv::Mat* img) {
-  cv::Mat kernel = (cv::Mat_<uchar>(3, 3) << 1, 2, 1, 2, 4, 2, 1, 2, 1);
+  cv::Mat kernel = (cv::Mat_<uchar>(3, 3) << 1, 2, 1,
+                                             2, 4, 2,
+                                             1, 2, 1);
   int sum_of_weights = 0;
 
   for (int r = 0; r < kernel.rows; ++r) {
@@ -87,7 +93,9 @@ cv::Mat fs::FocusStacking::ComputeWeights(const cv::Mat& img,
 
 
 cv::Mat fs::FocusStacking::Laplacian(const cv::Mat& img, int channel) {
-  cv::Mat kernel = (cv::Mat_<char>(3, 3) << -1, -1, -1, -1, 8, -1, -1, -1, -1);
+  cv::Mat kernel = (cv::Mat_<char>(3, 3) << -1, -1, -1,
+                                            -1,  8, -1,
+                                            -1, -1, -1);
 
   cv::Mat weights = ComputeWeights(img, kernel, channel);
   for (int r = 0; r < img.rows; ++r) {
@@ -114,4 +122,19 @@ std::vector<cv::Mat> fs::FocusStacking::ProcessImages(const std::vector<cv::Mat>
   }
 
   return weights;
+}
+
+
+std::vector<uchar> fs::FocusStacking::PrepareLookupTableWithColors(
+    size_t number_of_images) {
+  std::vector<uchar> gray_colors(number_of_images);
+  size_t step = (kDephtColorMaxWalue_) / gray_colors.size();
+  uchar color = kDephtColorMaxWalue_;
+  for (size_t i = 0; i < gray_colors.size(); ++i) {
+    gray_colors[i] = color;
+    color -= step;
+  }
+  gray_colors[gray_colors.size() - 1] = 0;
+
+  return gray_colors;
 }

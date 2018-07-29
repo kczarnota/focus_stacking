@@ -16,7 +16,7 @@ class FocusStacking {
     }
 
 
-    cv::Mat ComputeSharpImage();
+    std::pair<cv::Mat, cv::Mat> ComputeSharpImageAndDepthMap();
 
     static void GaussianBlur(cv::Mat *img);
     // Computes weights which indicate if given pixel belong to some edge
@@ -24,8 +24,11 @@ class FocusStacking {
                            int channel);
     // Perform Laplacian and return weights
     static cv::Mat Laplacian(const cv::Mat &img, int channel);
+    std::vector<uchar> PrepareLookupTableWithColors(size_t number_of_images);
 
   private:
+    static const uchar kDephtColorMaxWalue_ = 255;
+
     std::string images_directory_;
     SelectedChannel selected_channel_;
     std::unique_ptr<std::vector<cv::Mat>> images_;
