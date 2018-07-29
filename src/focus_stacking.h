@@ -11,8 +11,8 @@ class FocusStacking {
   public:
     FocusStacking(std::string images_directory,
                   EdgeDetectionMethod edge_detection_method,
-                  SelectedChannel selected_channel, int edge_threshold,
-                  int not_defined_depth_margin)
+                  SelectedChannel selected_channel, double edge_threshold,
+                  uchar not_defined_depth_margin)
         : images_directory_(images_directory),
           edge_detection_method_(edge_detection_method),
           selected_channel_(selected_channel),
@@ -27,6 +27,15 @@ class FocusStacking {
 
 
     std::pair<cv::Mat, cv::Mat> ComputeSharpImageAndDepthMap();
+    void PerformTests(std::vector<SelectedChannel> channels,
+                      std::vector<EdgeDetectionMethod> methods,
+                      std::vector<double> edge_thresholds,
+                      std::vector<uchar> depth_margins);
+
+    void SetChannel(SelectedChannel c) {selected_channel_ = c;}
+    void SetEdgeDetectionMethod(EdgeDetectionMethod e) {edge_detection_method_ = e;}
+    void SetEdgeThreshold(double t) {edge_threshold_ = t;}
+    void SetEdgeMargin(uchar m) {not_defined_depth_margin_ = m;}
 
     static void GaussianBlur(cv::Mat *img);
     // Computes weights which indicate if given pixel belong to some edge
@@ -40,12 +49,16 @@ class FocusStacking {
 
   private:
     static const uchar kDephtColorMaxWalue_ = 255;
+    static const cv::Mat kGaussianKernel_;
+    static const cv::Mat kLaplaceKernel_;
+    static const cv::Mat kSobelXKernel_;
+    static const cv::Mat kSobelYKernel_;
 
     std::string images_directory_;
     EdgeDetectionMethod edge_detection_method_;
     SelectedChannel selected_channel_;
-    int edge_threshold_;
-    int not_defined_depth_margin_;
+    double edge_threshold_;
+    uchar not_defined_depth_margin_;
     std::unique_ptr<std::vector<cv::Mat>> images_;
 
 
