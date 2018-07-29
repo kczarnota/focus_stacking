@@ -9,8 +9,9 @@ std::pair<cv::Mat, cv::Mat> fs::FocusStacking::ComputeSharpImageAndDepthMap() {
   const size_t number_of_images = images_->size();
   cv::Mat result = cv::Mat::zeros(rows, cols, CV_8UC3);
   cv::Mat depth = cv::Mat::zeros(rows, cols, CV_8UC1);
+
   std::vector<uchar> gray_colors =
-      PrepareLookupTableWithColors(number_of_images);
+      PrepareLookupTableWithColors(number_of_images, not_defined_depth_margin_);
 
   for (int r = 0; r < rows; ++r) {
     for (int c = 0; c < cols; ++c) {
@@ -23,8 +24,13 @@ std::pair<cv::Mat, cv::Mat> fs::FocusStacking::ComputeSharpImageAndDepthMap() {
         }
       }
 
+      if (max_val < edge_threshold_) {
+        max_ind = number_of_images - 1;
+        depth.at<uchar>(r, c) = gray_colors[max_ind + 1];
+      } else {
+        depth.at<uchar>(r, c) = gray_colors[max_ind];
+      }
       result.at<cv::Vec3b>(r, c) = (*images_)[max_ind].at<cv::Vec3b>(r, c);
-      depth.at<uchar>(r, c) = gray_colors[max_ind];
     }
   }
 
@@ -126,9 +132,9 @@ std::vector<cv::Mat> fs::FocusStacking::ProcessImages(const std::vector<cv::Mat>
 
 
 std::vector<uchar> fs::FocusStacking::PrepareLookupTableWithColors(
-    size_t number_of_images) {
-  std::vector<uchar> gray_colors(number_of_images);
-  size_t step = (kDephtColorMaxWalue_) / gray_colors.size();
+    size_t number_of_images, uchar edge_threshold) {
+  std::vector<uchar> gray_colors(number_of_images + 1);
+  size_t step = (kDephtColorMaxWalue_ - edge_threshold) / gray_colors.size();
   uchar color = kDephtColorMaxWalue_;
   for (size_t i = 0; i < gray_colors.size(); ++i) {
     gray_colors[i] = color;

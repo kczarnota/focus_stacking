@@ -9,11 +9,17 @@ enum class SelectedChannel { BLUE, GREEN, RED };
 class FocusStacking {
   public:
     FocusStacking(std::string images_directory,
-                  SelectedChannel selected_channel)
+                  SelectedChannel selected_channel, int edge_threshold,
+                  int not_defined_depth_margin)
         : images_directory_(images_directory),
-          selected_channel_(selected_channel) {
+          selected_channel_(selected_channel),
+          edge_threshold_(edge_threshold),
+          not_defined_depth_margin_(not_defined_depth_margin) {
       images_ = fs::LoadImages(images_directory_);
     }
+
+    explicit FocusStacking(std::string images_directory)
+        : FocusStacking(images_directory, SelectedChannel::GREEN, 30, 40) {}
 
 
     std::pair<cv::Mat, cv::Mat> ComputeSharpImageAndDepthMap();
@@ -24,13 +30,16 @@ class FocusStacking {
                            int channel);
     // Perform Laplacian and return weights
     static cv::Mat Laplacian(const cv::Mat &img, int channel);
-    std::vector<uchar> PrepareLookupTableWithColors(size_t number_of_images);
+    static std::vector<uchar> PrepareLookupTableWithColors(
+      size_t number_of_images, uchar edge_threshold);
 
   private:
     static const uchar kDephtColorMaxWalue_ = 255;
 
     std::string images_directory_;
     SelectedChannel selected_channel_;
+    int edge_threshold_;
+    int not_defined_depth_margin_;
     std::unique_ptr<std::vector<cv::Mat>> images_;
 
 

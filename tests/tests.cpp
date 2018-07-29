@@ -58,3 +58,13 @@ TEST(test_focus_stacking, Laplacian) {
   EXPECT_EQ(weights.at<double>(0, 0), 0);
   EXPECT_EQ(weights.at<double>(1, 1), 20);
 }
+
+TEST(test_focus_stacking, PrepareLookupTableWithColors) {
+  int number_of_images = 13;
+  std::vector<uchar> gray_colors =
+      fs::FocusStacking::PrepareLookupTableWithColors(number_of_images, 0);
+  EXPECT_EQ(gray_colors[0], 255);
+  EXPECT_EQ(gray_colors[1], 237);
+  EXPECT_EQ(gray_colors[number_of_images - 1], 39);
+  EXPECT_EQ(gray_colors[number_of_images], 0);
+}
