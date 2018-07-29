@@ -41,3 +41,18 @@ TEST(test_focus_stacking, GaussianBlur) {
   EXPECT_EQ(img.at<cv::Vec3b>(1, 1)[0], 2);
   EXPECT_EQ(img.at<cv::Vec3b>(1, 1)[1], 0);
 }
+
+TEST(test_focus_stacking, ComputeWeights) {
+  cv::Mat img = CreateTestMatrix();
+  cv::Mat kernel = (cv::Mat_<uchar>(3, 3) << 1, 2, 1, 2, 4, 2, 1, 2, 1);
+  cv::Mat weights = fs::ComputeWeights(img, kernel, 0);
+  EXPECT_EQ(weights.at<double>(0, 0), 0);
+  EXPECT_EQ(weights.at<double>(1, 1), 36);
+}
+
+TEST(test_focus_stacking, Laplacian) {
+  cv::Mat img = CreateTestMatrix();
+  cv::Mat weights = fs::Laplacian(img, 0);
+  EXPECT_EQ(weights.at<double>(0, 0), 0);
+  EXPECT_EQ(weights.at<double>(1, 1), 20);
+}
